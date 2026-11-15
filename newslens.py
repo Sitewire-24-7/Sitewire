@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Sightwire site builder: pulls 20 outlets, groups the same story, writes a static news site.
+"""Sightwire site builder: pulls 99 outlets, groups the same story, writes a static news site.
 Needs template.html beside it. Optional: ANTHROPIC_API_KEY for neutral AI summaries."""
 import argparse, collections, datetime, hashlib, html, json, math, os, re, socket, time, urllib.parse, urllib.request
 from concurrent.futures import ThreadPoolExecutor
