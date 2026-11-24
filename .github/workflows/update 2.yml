@@ -1,0 +1,38 @@
+name: Update NewsLens
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"   # GitHub treats this as a best-effort target and often runs it late; see the notes on an outside timer
+  workflow_dispatch:          # lets you (or an outside timer) start a build on demand
+
+permissions:
+  contents: write
+
+# Never run two builds at once: both would publish to the same branch. If one is already running,
+# the next waits its turn (only the newest waiting run is kept).
+concurrency:
+  group: update-site
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25      # a stuck feed or API call can't hold up every later build
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Fetch previous round-up
+        run: curl -sfL "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/roundup.json" -o prev_roundup.json || true
+      - name: Build site
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python newslens.py --out public --prev prev_roundup.json
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          force_orphan: true
